@@ -10,14 +10,16 @@ import { useParams } from "react-router-dom";
 import db from './firebase';
 import {useStateValue} from "./StateProvider";
 import firebase from 'firebase/app';
+import Picker from 'emoji-picker-react';
 
 const Chat = () => {
-    const [seed, setSeed] = useState("");
+    // const [seed, setSeed] = useState("");
     const [input, setInput] = useState("");
     const { roomId } = useParams();
     const [roomName, setRoomName] = useState("");
     const [messages, setMessages] = useState([]);
     const [{user}] = useStateValue();
+    const [showPicker, setShowPicker] = useState(false);
 
     useEffect(() => {
         if(roomId){
@@ -32,10 +34,11 @@ const Chat = () => {
             .onSnapshot((snapshot)=>setMessages(snapshot.docs.map((doc)=>doc.data())))
         }
     }, [roomId])    
+    
 
-    useEffect(() => {
-        setSeed(Math.floor(Math.random()*5000));
-    }, [roomId])
+    // useEffect(() => {
+    //     setSeed(Math.floor(Math.random()*5000));
+    // }, [roomId])
 
     const sendMessage =(e)=>{
         e.preventDefault();
@@ -46,15 +49,21 @@ const Chat = () => {
         })
         setInput("");
     }
+
+    const onEmojiClick = (event, emojiObject) => {
+        setInput(input+emojiObject.emoji);
+      };
+  
+
     return (
         <div className="chat">
             <div className="chat__header">
-                <Avatar src={`https://avatars.dicebear.com/api/human/${seed}.svg`} />
+                <Avatar src={`https://avatars.dicebear.com/api/human/${roomName}.svg`} />
                 <div className="chat__headerInfo">
                     <h3>{roomName}</h3>
                     <p>last seen{" "}
-                    {
-                        new Date(messages[messages.length-1]?.timestamp?.toDate()).toUTCString()
+                    {   messages.length > 0 ?
+                        new Date(messages[messages.length-1]?.timestamp?.toDate()).toUTCString() : null
                     }</p>
                 </div>
                 <div className="chat__headerRight">
@@ -79,12 +88,17 @@ const Chat = () => {
                 ))}
             </div>
             <div className="chat__footer">
-                    <InsertEmoticonIcon/>
+                    <div className="chat__emojiContainer" onClick={(e)=>setShowPicker(!showPicker)}>
+                        <InsertEmoticonIcon/>
+                    </div>
+                    
                     <form>
-                        <input type="text" value={input} onChange ={e=>setInput(e.target.value)}></input>
+                        <input type="text" value={input} onChange ={(e)=>setInput(e.target.value)}></input>
                         <button type="submit" onClick ={sendMessage}>Send a message</button>
                     </form>
                     <MicIcon/>
+                    
+                    {showPicker ? <Picker onEmojiClick={onEmojiClick}/>:null}
             </div>
             
         </div>
